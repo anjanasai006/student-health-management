@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import apiClient from '../api/client';
 
 const MoodEntry = ({ studentId, onMoodAdded }) => {
   const [mood, setMood] = useState(3);
@@ -21,16 +20,23 @@ const MoodEntry = ({ studentId, onMoodAdded }) => {
     setMessage('');
 
     try {
-      const res = await apiClient.addMoodEntry(studentId, parseInt(mood), notes);
-      if (res.success) {
-        setMessage('✅ Mood entry saved!');
-        setMood(3);
-        setNotes('');
-        if (onMoodAdded) onMoodAdded(res.data);
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        setMessage(`❌ Error: ${res.error}`);
-      }
+      // Demo mode: Simulate saving mood entry
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newMood = {
+        _id: "demo-" + Date.now(),
+        studentId: studentId,
+        mood: parseInt(mood),
+        notes: notes,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        timestamp: new Date()
+      };
+
+      setMessage('✅ Mood entry saved!');
+      setMood(3);
+      setNotes('');
+      if (onMoodAdded) onMoodAdded(newMood);
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setMessage(`❌ Failed to save mood: ${err.message}`);
     } finally {

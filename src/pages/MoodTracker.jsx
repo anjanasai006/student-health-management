@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import MoodEntry from '../components/MoodEntry';
-import apiClient from '../api/client';
 
 const MoodTracker = () => {
   const [studentId] = useState(() => {
@@ -9,8 +8,33 @@ const MoodTracker = () => {
     return stored || '1';
   });
 
-  const [moodEntries, setMoodEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [moodEntries, setMoodEntries] = useState(() => {
+    // Load from localStorage or use demo data
+    const stored = localStorage.getItem('moodEntries_' + studentId);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return [
+      {
+        _id: "demo-1",
+        studentId: studentId,
+        mood: 4,
+        notes: "Had a great morning workout!",
+        date: new Date(Date.now() - 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        timestamp: new Date(Date.now() - 86400000)
+      },
+      {
+        _id: "demo-2",
+        studentId: studentId,
+        mood: 3,
+        notes: "Feeling neutral, lots of work today",
+        date: new Date(Date.now() - 172800000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        timestamp: new Date(Date.now() - 172800000)
+      }
+    ];
+  });
+
+  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editMood, setEditMood] = useState(3);
   const [editNotes, setEditNotes] = useState('');
@@ -23,23 +47,10 @@ const MoodTracker = () => {
     5: '😄 Excellent'
   };
 
-  const fetchMoods = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.getMoodEntries(studentId);
-      if (res.success) {
-        setMoodEntries(res.data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch moods', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Save to localStorage whenever moodEntries change
   useEffect(() => {
-    fetchMoods();
-  }, [studentId]);
+    localStorage.setItem('moodEntries_' + studentId, JSON.stringify(moodEntries));
+  }, [moodEntries, studentId]);
 
   const handleMoodAdded = (newMood) => {
     setMoodEntries([newMood, ...moodEntries]);
@@ -53,29 +64,19 @@ const MoodTracker = () => {
 
   const handleSaveEdit = async () => {
     if (!editingId) return;
-    try {
-      const res = await apiClient.updateMoodEntry(editingId, editMood, editNotes);
-      if (res.success) {
-        setMoodEntries(moodEntries.map(e => e._id === editingId ? res.data : e));
-        setEditingId(null);
-        setEditMood(3);
-        setEditNotes('');
-      }
-    } catch (err) {
-      console.error('Failed to update mood', err);
-    }
+    setMoodEntries(moodEntries.map(e => 
+      e._id === editingId 
+        ? { ...e, mood: editMood, notes: editNotes }
+        : e
+    ));
+    setEditingId(null);
+    setEditMood(3);
+    setEditNotes('');
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this mood entry?')) return;
-    try {
-      const res = await apiClient.deleteMoodEntry(id);
-      if (res.success) {
-        setMoodEntries(moodEntries.filter(e => e._id !== id));
-      }
-    } catch (err) {
-      console.error('Failed to delete mood', err);
-    }
+    setMoodEntries(moodEntries.filter(e => e._id !== id));
   };
 
   return (

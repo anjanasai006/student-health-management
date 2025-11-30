@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../api/client";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,23 +29,28 @@ const Login = () => {
     setLoading(true);
     setError("");
 
+    // Demo mode: Accept any email/password
     try {
-      const res = await apiClient.login(email, password);
-      if (res.success) {
-        localStorage.setItem("user", JSON.stringify(res.user));
-        localStorage.setItem("studentId", res.user.id);
-        localStorage.setItem("token", res.token);
-        
-        if (res.user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/student/dashboard");
-        }
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
+      
+      const user = {
+        id: "demo-" + Date.now(),
+        email: email,
+        name: email.split("@")[0],
+        role: isAdmin ? "admin" : "student"
+      };
+
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("studentId", user.id);
+      localStorage.setItem("token", "demo-token-" + Date.now());
+      
+      if (isAdmin) {
+        navigate("/admin/dashboard");
       } else {
-        setError(res.error || "Login failed");
+        navigate("/student/dashboard");
       }
     } catch (err) {
-      setError("Failed to connect to server");
+      setError("Login failed");
     } finally {
       setLoading(false);
     }
@@ -63,35 +67,23 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: registerData.name,
-          email: registerData.email,
-          password: registerData.password,
-          role: "student"
-        })
-      }).then(r => r.json());
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
 
-      if (res.success) {
-        setShowRegister(false);
-        setEmail(registerData.email);
-        setPassword(registerData.password);
-        setRegisterData({ name: "", email: "", password: "", confirmPassword: "" });
-        // Auto-login
-        const loginRes = await apiClient.login(registerData.email, registerData.password);
-        if (loginRes.success) {
-          localStorage.setItem("user", JSON.stringify(loginRes.user));
-          localStorage.setItem("studentId", loginRes.user.id);
-          localStorage.setItem("token", loginRes.token);
-          navigate("/student/dashboard");
-        }
-      } else {
-        setError(res.error || "Registration failed");
-      }
+      // Demo mode: Accept any registration
+      const user = {
+        id: "demo-" + Date.now(),
+        email: registerData.email,
+        name: registerData.name,
+        role: "student"
+      };
+
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("studentId", user.id);
+      localStorage.setItem("token", "demo-token-" + Date.now());
+      
+      navigate("/student/dashboard");
     } catch (err) {
-      setError("Failed to register");
+      setError("Registration failed");
     } finally {
       setLoading(false);
     }

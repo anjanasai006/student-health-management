@@ -1,24 +1,18 @@
 {
-  "buildCommand": "npm install",
-  "outputDirectory": ".",
-  "nodeVersion": "18.x",
-  "functions": {
-    "server/server.js": {
-      "memory": 1024,
-      "maxDuration": 60
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server/server.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+      "dest": "api/index.js"
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "MONGO_URI": "@MONGO_URI",
-    "CLIENT_URL": "@CLIENT_URL",
-    "PORT": "3001"
+    "NODE_ENV": "production"
   }
 }
