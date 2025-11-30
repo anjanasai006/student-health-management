@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Feedback from "./pages/Feedback";
 import StudentTracking from "./pages/StudentTracking";
 import MoodTracker from "./pages/MoodTracker";
+import TherapySession from "./pages/TherapySession";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -20,6 +21,8 @@ const App = () => {
       <Route path="/student/tracking" element={<StudentTracking />} />
       <Route path="/mood" element={<MoodTracker />} />
       <Route path="/student/mood" element={<MoodTracker />} />
+      <Route path="/therapy" element={<TherapySession />} />
+      <Route path="/student/therapy" element={<TherapySession />} />
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>

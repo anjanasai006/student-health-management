@@ -98,6 +98,54 @@ const Sidebar = ({ role }) => {
           </div>
         </NavLink>
 
+        {!isAdmin && (
+          <NavLink
+            to="/student/therapy"
+            className={({ isActive }) =>
+              [
+                navItemBase,
+                isActive
+                  ? "bg-slate-900 text-slate-50 border border-slate-700 shadow-md shadow-slate-900/70"
+                  : "text-slate-300 hover:bg-slate-900/70 hover:text-white",
+              ].join(" ")
+            }
+          >
+            <span className={iconBase}>
+              <span>🧠</span>
+            </span>
+            <div>
+              <p className="text-xs font-medium leading-none">Therapy Sessions</p>
+              <p className="text-[11px] text-slate-400">
+                Book & manage sessions
+              </p>
+            </div>
+          </NavLink>
+        )}
+
+        {!isAdmin && (
+          <NavLink
+            to="/student/mood"
+            className={({ isActive }) =>
+              [
+                navItemBase,
+                isActive
+                  ? "bg-slate-900 text-slate-50 border border-slate-700 shadow-md shadow-slate-900/70"
+                  : "text-slate-300 hover:bg-slate-900/70 hover:text-white",
+              ].join(" ")
+            }
+          >
+            <span className={iconBase}>
+              <span>😊</span>
+            </span>
+            <div>
+              <p className="text-xs font-medium leading-none">Mood Tracker</p>
+              <p className="text-[11px] text-slate-400">
+                Track daily mood & emotions
+              </p>
+            </div>
+          </NavLink>
+        )}
+
         {isAdmin && (
           <NavLink
             to="/admin/dashboard"

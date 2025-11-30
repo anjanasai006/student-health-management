@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import MainLayout from '../layouts/MainLayout';
 import MoodEntry from '../components/MoodEntry';
 import apiClient from '../api/client';
 
 const MoodTracker = () => {
   const [studentId] = useState(() => {
-    // Get from localStorage or URL params
     const stored = localStorage.getItem('studentId');
-    return stored || '1'; // fallback to demo ID
+    return stored || '1';
   });
 
   const [moodEntries, setMoodEntries] = useState([]);
@@ -23,7 +23,6 @@ const MoodTracker = () => {
     5: '😄 Excellent'
   };
 
-  // Fetch mood entries
   const fetchMoods = async () => {
     setLoading(true);
     try {
@@ -42,155 +41,173 @@ const MoodTracker = () => {
     fetchMoods();
   }, [studentId]);
 
-  // Handle new mood entry added
   const handleMoodAdded = (newMood) => {
     setMoodEntries([newMood, ...moodEntries]);
   };
 
-  // Start editing
   const handleEdit = (entry) => {
     setEditingId(entry._id);
     setEditMood(entry.mood);
-    setEditNotes(entry.notes);
+    setEditNotes(entry.notes || '');
   };
 
-  // Save edited mood
-  const handleSaveEdit = async (id) => {
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
     try {
-      const res = await apiClient.updateMoodEntry(id, parseInt(editMood), editNotes);
+      const res = await apiClient.updateMoodEntry(editingId, editMood, editNotes);
       if (res.success) {
-        setMoodEntries(moodEntries.map(m => m._id === id ? res.data : m));
+        setMoodEntries(moodEntries.map(e => e._id === editingId ? res.data : e));
         setEditingId(null);
+        setEditMood(3);
+        setEditNotes('');
       }
     } catch (err) {
       console.error('Failed to update mood', err);
     }
   };
 
-  // Delete mood entry
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this mood entry?')) {
-      try {
-        const res = await apiClient.deleteMoodEntry(id);
-        if (res.success) {
-          setMoodEntries(moodEntries.filter(m => m._id !== id));
-        }
-      } catch (err) {
-        console.error('Failed to delete mood', err);
+    if (!confirm('Delete this mood entry?')) return;
+    try {
+      const res = await apiClient.deleteMoodEntry(id);
+      if (res.success) {
+        setMoodEntries(moodEntries.filter(e => e._id !== id));
       }
+    } catch (err) {
+      console.error('Failed to delete mood', err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">Mental Health & Mood Tracker</h1>
-
-        {/* Mood Entry Form */}
-        <div className="mb-8">
-          <MoodEntry studentId={studentId} onMoodAdded={handleMoodAdded} />
+    <MainLayout role="student">
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">😊 Mood Tracker</h1>
+          <p className="text-gray-600 text-sm mt-1">Track your daily mood and emotional well-being</p>
         </div>
 
-        {/* Mood Entries List */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Mood History</h2>
+        {/* Mood Entry Form */}
+        <MoodEntry studentId={studentId} onMoodAdded={handleMoodAdded} />
+
+        {/* Mood History */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-blue-800 mb-4">📅 Your Mood History</h2>
 
           {loading ? (
             <p className="text-gray-600 text-center py-8">Loading mood entries...</p>
           ) : moodEntries.length === 0 ? (
-            <p className="text-gray-600 text-center py-8">No mood entries yet. Start tracking your mood above!</p>
+            <p className="text-gray-600 text-center py-8">No mood entries yet. Start tracking today!</p>
           ) : (
             <div className="space-y-3">
-              {moodEntries.map((entry) => (
-                <div key={entry._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                  {editingId === entry._id ? (
-                    // Edit Mode
+              {moodEntries.map((entry) =>
+                editingId === entry._id ? (
+                  <div key={entry._id} className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+                    <h3 className="font-bold text-gray-800 mb-3">✏️ Edit Mood Entry</h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-semibold text-gray-700">Mood:</label>
-                        <select
-                          value={editMood}
-                          onChange={(e) => setEditMood(e.target.value)}
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"
-                        >
+                        <label className="block text-gray-700 font-semibold mb-2">Mood</label>
+                        <div className="flex justify-between gap-2 mb-2">
                           {[1, 2, 3, 4, 5].map(m => (
-                            <option key={m} value={m}>{moodLabels[m]}</option>
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setEditMood(m)}
+                              className={`flex-1 py-2 rounded-lg font-bold transition ${
+                                editMood === m
+                                  ? 'bg-blue-500 text-white scale-105'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {m === 1 ? '😢' : m === 2 ? '😕' : m === 3 ? '😐' : m === 4 ? '🙂' : '😄'}
+                            </button>
                           ))}
-                        </select>
+                        </div>
+                        <input
+                          type="range"
+                          min="1"
+                          max="5"
+                          value={editMood}
+                          onChange={(e) => setEditMood(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-300 rounded-lg accent-blue-500"
+                        />
                       </div>
                       <div>
-                        <label className="text-sm font-semibold text-gray-700">Notes:</label>
+                        <label className="block text-gray-700 font-semibold mb-2">Notes</label>
                         <textarea
                           value={editNotes}
                           onChange={(e) => setEditNotes(e.target.value)}
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"
-                          rows="2"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white"
+                          rows="3"
                         />
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleSaveEdit(entry._id)}
-                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                          onClick={handleSaveEdit}
+                          className="flex-1 px-4 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition"
                         >
-                          Save
+                          ✅ Save
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+                          className="flex-1 px-4 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition"
                         >
-                          Cancel
+                          ✕ Cancel
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    // View Mode
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-3xl">
-                            {entry.mood === 1 ? '😢' : entry.mood === 2 ? '😕' : entry.mood === 3 ? '😐' : entry.mood === 4 ? '🙂' : '😄'}
-                          </span>
-                          <div>
+                  </div>
+                ) : (
+                  <div key={entry._id} className="bg-white rounded-lg p-4 border-2 border-blue-200 shadow-md hover:shadow-lg transition">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <span className="text-4xl">
+                          {entry.mood === 1 ? '😢' : entry.mood === 2 ? '😕' : entry.mood === 3 ? '😐' : entry.mood === 4 ? '🙂' : '😄'}
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
                             <p className="font-bold text-lg text-gray-800">{moodLabels[entry.mood]}</p>
-                            <p className="text-sm text-gray-500">{entry.date}</p>
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold">{entry.date}</span>
                           </div>
+                          {entry.notes && (
+                            <p className="text-gray-700 mt-2 text-sm bg-gray-50 p-2 rounded border-l-4 border-blue-500">{entry.notes}</p>
+                          )}
                         </div>
-                        {entry.notes && (
-                          <p className="text-gray-700 mt-2 text-sm">{entry.notes}</p>
-                        )}
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                          className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
                         >
-                          Edit
+                          ✏️ Edit
                         </button>
                         <button
                           onClick={() => handleDelete(entry._id)}
-                          className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                          className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
                         >
-                          Delete
+                          🗑️ Delete
                         </button>
                       </div>
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                )
+              )}
             </div>
           )}
 
-          {/* Stats */}
+          {/* Statistics */}
           {moodEntries.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="font-semibold text-gray-800 mb-3">Your Stats</h3>
+            <div className="mt-6 pt-6 border-t-2 border-blue-300">
+              <h3 className="font-bold text-blue-800 mb-4 text-lg">📊 Your Mood Distribution</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[1, 2, 3, 4, 5].map(m => {
                   const count = moodEntries.filter(e => e.mood === m).length;
+                  const percentage = ((count / moodEntries.length) * 100).toFixed(0);
                   return (
-                    <div key={m} className="bg-gray-100 p-3 rounded-lg text-center">
-                      <p className="text-2xl mb-1">{m === 1 ? '😢' : m === 2 ? '😕' : m === 3 ? '😐' : m === 4 ? '🙂' : '😄'}</p>
-                      <p className="text-sm text-gray-700">{count} times</p>
+                    <div key={m} className="bg-white rounded-lg p-4 border-2 border-blue-200 text-center shadow-md">
+                      <p className="text-3xl mb-2">{m === 1 ? '😢' : m === 2 ? '😕' : m === 3 ? '😐' : m === 4 ? '🙂' : '😄'}</p>
+                      <p className="text-sm text-gray-700 font-semibold">{count} times</p>
+                      <p className="text-xs text-gray-500">{percentage}%</p>
                     </div>
                   );
                 })}
@@ -199,7 +216,7 @@ const MoodTracker = () => {
           )}
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

@@ -80,22 +80,33 @@ const MoodEntry = ({ studentId, onMoodAdded }) => {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="What's on your mind? (optional)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white"
             rows="3"
           />
         </div>
+
+        {/* Success/Error Message */}
+        {message && (
+          <div className={`p-3 rounded-lg text-sm font-semibold ${
+            message.includes('✅')
+              ? 'bg-green-100 text-green-800 border border-green-300'
+              : 'bg-red-100 text-red-800 border border-red-300'
+          }`}>
+            {message}
+          </div>
+        )}
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-2 px-4 rounded-lg font-semibold transition ${
+          className={`w-full py-3 px-4 rounded-lg font-bold text-lg transition ${
             loading
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
+              : 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700'
           }`}
         >
-          {loading ? 'Saving...' : 'Save Mood Entry'}
+          {loading ? '⏳ Saving...' : '✅ Save Mood Entry'}
         </button>
 
         {/* Message */}
